@@ -594,7 +594,7 @@ class Editor
 		//Draw the layers below and including the current one
 		for(levelOpened in EDITOR.levelManager.allLevels){
 			var i = levelOpened.layers.length - 1;
-			setLevel(levelOpened);
+			setLevel(levelOpened); 
 			OGMO.updateWindowTitle();
 			while(i > levelOpened.currentLayerID) 
 			{
