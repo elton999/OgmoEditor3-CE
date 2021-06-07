@@ -1,5 +1,6 @@
 package level.editor.ui;
 
+import js.html.Console;
 import io.FileSystem;
 import js.node.fs.Stats;
 import js.Browser;
@@ -382,6 +383,7 @@ class LevelsPanel extends SidePanel
 	function selectLevel(node: ItemListNode):Void
 	{
 		inline function openLevel(data:String) {
+			EDITOR.levelManager.showAllLevels = false;
 			EDITOR.levelManager.open(data, null,
 			function (error)
 			{
@@ -439,6 +441,19 @@ class LevelsPanel extends SidePanel
 	{
 		var menu = new RightClickMenu(OGMO.mouse);
 		menu.onClosed(function() { node.highlighted = false; });
+
+		//show all levels
+		menu.addOption("Show All Levels (map)", null, function() {
+			EDITOR.levelManager.allLevels = [];
+			EDITOR.levelManager.showAllLevels = true;
+			
+			for(child in node.children){
+				EDITOR.levelManager.open(child.data, null,null);
+				EDITOR.levelManager.allLevels.push(EDITOR.level);
+				EDITOR.loopMap();
+			}
+			// TODO: select all levels
+		});
 
 		menu.addOption("Create Level Here", "new-file", function()
 		{

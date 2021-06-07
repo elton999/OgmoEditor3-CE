@@ -25,7 +25,7 @@ class LayerEditor
 	/**
 	 * Draw this layer's content using editor.draw (GL Renderer)
 	 */
-	public function draw():Void {}
+	public function draw(offset_x : Float = 0, offset_y : Float = 0):Void {}
 
 	/**
 	 * If this is the current layer, draw stuff above the grid using editor.draw (GL Renderer)

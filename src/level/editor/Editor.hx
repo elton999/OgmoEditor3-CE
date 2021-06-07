@@ -1,5 +1,6 @@
 package level.editor;
 
+import js.html.Console;
 import js.node.ChildProcess;
 import haxe.io.Path;
 import util.Matrix;
@@ -43,6 +44,7 @@ class Editor
 	public var isOverlayDirty:Bool = false;
 	public var currentLayerEditor(get, null):LayerEditor;
 	public var propertyDisplayDropdown: PropertyDisplayDropdown;
+
 
 	var lastArrows: Vector = new Vector();
 	var mouseMoving:Bool = false;
@@ -498,35 +500,70 @@ class Editor
 	}
 
 	public function loop():Void
-	{		 
-		if (level != null)
-		{
-			if (currentLayerEditor != null) currentLayerEditor.loop();
-			updateArrowKeys();
-			if (EDITOR.toolBelt.current != null) EDITOR.toolBelt.current.update();
-		}
-
-		//Draw the level
-		if (isDirty)
-		{
-			isDirty = false;
-			draw.clear();
-
-			if (level != null) drawLevel();
-		}
-
-		//Draw the overlay
-		lastOverlayUpdate += OGMO.deltaTime;
-		if (isOverlayDirty)// || lastOverlayUpdate >= 1 / 6) <-- Uncomment to re-enable overlay animation
-		{
-			isOverlayDirty = false;
-			overlay.clear();
-
+	{
+		if(EDITOR.levelManager.showAllLevels){
+			loopMap();
+		}else{
 			if (level != null)
-				drawOverlay();
-			lastOverlayUpdate = 0;
+			{
+				if (currentLayerEditor != null) currentLayerEditor.loop();
+				updateArrowKeys();
+				if (EDITOR.toolBelt.current != null) EDITOR.toolBelt.current.update();
+			}
+
+			//Draw the level
+			if (isDirty)
+			{
+				isDirty = false;
+				draw.clear();
+
+				if (level != null) drawLevel();
+			}
+
+			//Draw the overlay
+			lastOverlayUpdate += OGMO.deltaTime;
+			if (isOverlayDirty)// || lastOverlayUpdate >= 1 / 6) <-- Uncomment to re-enable overlay animation
+			{
+				isOverlayDirty = false;
+				overlay.clear();
+
+				if (level != null)
+					drawOverlay();
+				lastOverlayUpdate = 0;
+			}
 		}
 	}
+
+	public function loopMap():Void
+	{		 
+			if (level != null)
+			{
+				if (currentLayerEditor != null) currentLayerEditor.loop();
+				updateArrowKeys();
+				if (EDITOR.toolBelt.current != null) EDITOR.toolBelt.current.update();
+			}
+	
+			//Draw the level
+			if (isDirty)
+			{
+				isDirty = false;
+				draw.clear();
+
+				drawLevelPartOfMap();
+			}
+	
+			//Draw the overlay
+			lastOverlayUpdate += OGMO.deltaTime;
+			if (isOverlayDirty)// || lastOverlayUpdate >= 1 / 6) <-- Uncomment to re-enable overlay animation
+			{
+				isOverlayDirty = false;
+				overlay.clear();
+	
+				if (level != null)
+					drawOverlay();
+				lastOverlayUpdate = 0;
+			}
+		}
 
 	public function dirty():Void
 	{
@@ -550,6 +587,78 @@ class Editor
 		ACTUAL DRAWING
 	*/
 
+	public function drawLevelPartOfMap():Void{
+		// TODO: the code is the same
+		draw.setAlpha(1);
+		
+		//Draw the layers below and including the current one
+		for(levelOpened in EDITOR.levelManager.allLevels){
+			var i = levelOpened.layers.length - 1;
+			setLevel(levelOpened);
+			OGMO.updateWindowTitle();
+			while(i > levelOpened.currentLayerID) 
+			{
+				
+				if (EDITOR.layerEditors[i] != null && EDITOR.layerEditors[i].visible && 
+					EDITOR.layerEditors[i].template.definition.id == "grid")  
+					EDITOR.layerEditors[i].draw(levelOpened.data.offset.x, levelOpened.data.offset.y);
+				i--;
+			}
+			if (EDITOR.layerEditors[level.currentLayerID] != null && 
+				EDITOR.layerEditors[level.currentLayerID].template.definition.id == "grid") 
+				EDITOR.layerEditors[level.currentLayerID].draw(levelOpened.data.offset.x, levelOpened.data.offset.y);
+		}
+
+		//Draw the layers above the current one at half alpha
+		if (level.currentLayerID > 0)
+		{
+			draw.setAlpha(0.3);
+			
+			var i = level.currentLayerID - 1;
+			while (i >= 0)
+			{
+				if (EDITOR.layerEditors[i] != null && EDITOR.layerEditors[i].visible) EDITOR.layerEditors[i].draw();
+				i--;
+			}
+			draw.setAlpha(1);
+		}
+
+		//Check Tools availability
+		EDITOR.toolBelt.checkAvailability();
+		
+		draw.finishDrawing();
+
+		if (saveLevelAsImageRequested)
+		{
+			saveLevelAsImageRequested = false;
+			var camBackup = EDITOR.level.camera.clone();
+
+			draw.setAlpha(1);
+			draw.setupRenderTarget(level.data.size);
+
+			var i = level.layers.length - 1;
+			while(i >= 0) 
+			{
+				if (EDITOR.layerEditors[i] != null && EDITOR.layerEditors[i].visible) EDITOR.layerEditors[i].draw();
+				i--;
+			}
+
+			draw.finishDrawing();
+
+			var pixels = draw.getRenderTargetPixels();
+			var path = FileSystem.chooseSaveFile("Level as image", [{ name: "Image", extensions: ["png"]}], level.displayNameNoExtension + ".png");
+			if (path.length > 0)
+				FileSystem.saveRGBAToPNG(pixels, Math.floor(level.data.size.x), Math.floor(level.data.size.y), path);
+
+			draw.doneRenderTarget();
+			draw.destroyRenderTarget();
+
+			EDITOR.level.camera = camBackup;
+			EDITOR.level.updateCameraInverse();
+		}
+
+	}
+	
 	public function drawLevel():Void
 	{
 		draw.setAlpha(1);
@@ -558,8 +667,9 @@ class Editor
 		draw.drawRect(12, 12, level.data.size.x, level.data.size.y, Color.black.x(.8));
 		draw.drawRect(-1, -1, level.data.size.x + 2, level.data.size.y + 2, Color.black);
 		draw.drawRect(0, 0, level.data.size.x, level.data.size.y, level.project.backgroundColor);
-
+		
 		//Draw the layers below and including the current one
+		// TODO: Verificar essa função
 		var i = level.layers.length - 1;
 		while(i > level.currentLayerID) 
 		{

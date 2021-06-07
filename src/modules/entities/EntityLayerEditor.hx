@@ -64,7 +64,7 @@ class EntityLayerEditor extends LayerEditor
 		brush = 0;
 	}
 
-	override function draw()
+	override function draw(offset_x : Float = 0, offset_y : Float = 0)
 	{
 		// Draw Hover
 		if (active && hovered.amount > 0)

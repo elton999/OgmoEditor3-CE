@@ -36,7 +36,7 @@ class DecalLayerEditor extends LayerEditor
 		selected.remove(decal);
 	}
 
-	override function draw(): Void
+	override function draw(offset_x : Float = 0, offset_y : Float = 0): Void
 	{
 		// draw decals
 		for (decal in (cast layer : DecalLayer).decals)

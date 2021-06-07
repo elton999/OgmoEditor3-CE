@@ -10,6 +10,8 @@ import level.data.Level;
 class LevelManager
 {
 	public var levels:Array<Level> = [];
+	public var allLevels:Array<Level> = [];
+	public var showAllLevels:Bool = false;
 
 	public function new () {}
 

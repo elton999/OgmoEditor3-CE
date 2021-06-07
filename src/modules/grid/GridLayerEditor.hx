@@ -1,5 +1,6 @@
 package modules.grid;
 
+import level.editor.Editor;
 import level.editor.LayerEditor;
 
 class GridLayerEditor extends LayerEditor
@@ -16,7 +17,7 @@ class GridLayerEditor extends LayerEditor
 		brushRight = (cast template : GridLayerTemplate).transparent;
 	}
 
-	override function draw():Void
+	override function draw(offset_x : Float = 0, offset_y : Float = 0):Void
 	{
 		for (y in 0...(cast layer : GridLayer).data[0].length)
 		{
@@ -36,8 +37,8 @@ class GridLayerEditor extends LayerEditor
 				var c = (cast template : GridLayerTemplate).legend[last];
 				if (c != null && !c.equals(Color.transparent))
 					EDITOR.draw.drawRect(
-						layer.offset.x + startX * template.gridSize.x,
-						layer.offset.y + y * template.gridSize.y,
+						offset_x + layer.offset.x + startX * template.gridSize.x,
+						offset_y + layer.offset.y + y * template.gridSize.y,
 						template.gridSize.x * range,
 						template.gridSize.y,
 						c);
@@ -48,6 +49,38 @@ class GridLayerEditor extends LayerEditor
 			range++;
 			}
 		}
+
+		// left bar
+		EDITOR.draw.drawRect(
+			offset_x+layer.offset.x,
+			offset_y+layer.offset.y,
+			2,
+			(cast layer : GridLayer).data[0].length * template.gridSize.y,
+			Color.white);
+		
+		// right bar
+		EDITOR.draw.drawRect(
+			offset_x+layer.offset.x + ((cast layer : GridLayer).data.length * template.gridSize.x),
+			offset_y+layer.offset.y,
+			2,
+			(cast layer : GridLayer).data[0].length * template.gridSize.y,
+			Color.white);
+
+		// top bar
+		EDITOR.draw.drawRect(
+			offset_x+layer.offset.x,
+			offset_y+layer.offset.y,
+			(cast layer : GridLayer).data.length * template.gridSize.x,
+			2,
+			Color.white);
+		
+		// bottom bar
+		EDITOR.draw.drawRect(
+			offset_x+layer.offset.x,
+			offset_y+layer.offset.y + ((cast layer : GridLayer).data[0].length * template.gridSize.y),
+			(cast layer : GridLayer).data.length * template.gridSize.x,
+			2,
+			Color.white);
 	}
 
 	override function createPalettePanel()

@@ -14,7 +14,7 @@ class TileLayerEditor extends LayerEditor
 		super(id);
 	}
 
-	override function draw():Void
+	override function draw(offset_x : Float = 0, offset_y : Float = 0):Void
 	{
 		for (x in 0...layer.gridCellsX) for (y in 0...layer.gridCellsY)
 		{

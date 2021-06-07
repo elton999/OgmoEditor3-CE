@@ -183,9 +183,15 @@ class Ogmo
 		if (ogmo.project != null)
 		{
 			str = " " + ogmo.project.name + "   |" + str;
-			if (editor.active && editor.level != null)
+			if (editor.active && editor.level != null && !editor.levelManager.showAllLevels)
 			{
 				str = " " + editor.level.displayName + "   |  " + str;
+				edited = true;
+			}
+
+			if (editor.levelManager.showAllLevels)
+			{
+				str = "All levels  |  " + str;
 				edited = true;
 			}
 		}
